@@ -886,6 +886,40 @@ func (sa *Application) tryAllocate(headRoom *resources.Resource, nodeIterator fu
 					zap.String("required node", requiredNode))
 				return nil
 			}
+
+			// Are there any non daemon set reservations on specific required node?
+			// Cancel those reservations to run daemon set pods
+			reservations := node.getReservations()
+			if len(reservations) > 0 {
+				unreserve := true
+				for _, res := range node.getReservations() {
+					// skip the node
+					if res.ask.GetRequiredNode() != "" {
+						unreserve = false
+						break
+					}
+				}
+				if unreserve {
+					// un reserve all the apps that were reserved on the node
+					reservedKeys, releasedAsks := node.UnReserveApps()
+					if len(reservedKeys) == 0 || len(releasedAsks) == 0 {
+						log.Logger().Warn("Unable to cancel reservations on node",
+							zap.String("application ID", sa.ApplicationID),
+							zap.String("allocationKey", request.GetAllocationKey()),
+							zap.String("required node", requiredNode),
+							zap.Int("reservedKeys count", len(reservedKeys)),
+							zap.Int("releasedAsks count", len(releasedAsks)))
+					} else {
+						log.Logger().Debug("Cancelled reservation on required node",
+							zap.String("application ID", sa.ApplicationID),
+							zap.String("allocationKey", request.GetAllocationKey()),
+							zap.String("required node", requiredNode),
+							zap.Int("reservedKeys count", len(reservedKeys)),
+							zap.Int("releasedAsks count", len(releasedAsks)))
+					}
+				}
+			}
+
 			alloc := sa.tryNode(node, request)
 			if alloc != nil {
 				// check if the node was reserved and we allocated after a release

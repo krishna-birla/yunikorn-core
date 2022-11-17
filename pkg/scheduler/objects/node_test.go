@@ -231,12 +231,14 @@ func TestNodeReservation(t *testing.T) {
 	if node.IsReserved() && !node.isReservedForApp(appID1) {
 		t.Errorf("node should have reservations for app-1")
 	}
+	assert.Equal(t, 1, len(node.getReservations()), "node should have 1 reservations")
 
 	// 2nd reservation on node
 	err = node.Reserve(nil, nil)
 	if err == nil {
 		t.Errorf("reservation requested on already reserved node: error %v", err)
 	}
+	assert.Equal(t, 1, len(node.getReservations()), "node should have 1 reservations")
 
 	// unreserve different app
 	_, err = node.unReserve(nil, nil)
@@ -252,6 +254,7 @@ func TestNodeReservation(t *testing.T) {
 	num, err = node.unReserve(app, ask)
 	assert.NilError(t, err, "un-reserve should not have failed")
 	assert.Equal(t, num, 1, "un-reserve app should have released ")
+	assert.Equal(t, 0, len(node.getReservations()), "node should not have any reservations")
 }
 
 func TestUnReserveApps(t *testing.T) {
