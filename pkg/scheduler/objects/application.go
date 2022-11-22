@@ -910,7 +910,7 @@ func (sa *Application) tryAllocate(headRoom *resources.Resource, nodeIterator fu
 							zap.Int("reservedKeys count", len(reservedKeys)),
 							zap.Int("releasedAsks count", len(releasedAsks)))
 					} else {
-						log.Logger().Debug("Cancelled reservation on required node",
+						log.Logger().Info("Cancelled reservation on required node",
 							zap.String("application ID", sa.ApplicationID),
 							zap.String("allocationKey", request.GetAllocationKey()),
 							zap.String("required node", requiredNode),
